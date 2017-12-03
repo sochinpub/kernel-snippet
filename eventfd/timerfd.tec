@@ -1,0 +1,25 @@
+
+#include <sys/timerfd.h> 
+int timerfd_create(int clockid, int flags);
+// 初始化定时器的参数，初始间隔与定时间隔。
+int timerfd_settime(int fd, int flags, const struct itimerspec *new_value,struct itimerspec *old_value); 
+int timerfd_gettime(int fd, struct itimerspec *curr_value);
+
+timerfd_create：创建一个timerfd；返回的fd可以进行如下操作：read、select(poll、epoll)、close
+timerfd_settime：设置timer的周期，以及起始间隔
+timerfd_gettime：获取到期时间。
+
+
+//函数参数中数据结构如下： 
+struct timespec 
+{ 
+    time_t tv_sec; /* Seconds */ 
+    long tv_nsec; /* Nanoseconds */ 
+}; 
+struct itimerspec 
+{ 
+    struct timespec it_interval; /* Interval for periodic timer */ 
+    struct timespec it_value; /* Initial expiration */ 
+};
+
+

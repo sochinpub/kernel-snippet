@@ -1,0 +1,9 @@
+
+#include <sys/signalfd.h> 
+int signalfd(int fd, const sigset_t *mask, int flags);
+
+参数fd：如果是-1则表示新建一个，如果是一个已经存在的则表示修改signalfd所关联的信号；
+
+参数mask：信号集合；
+参数flag：内核版本2.6.27以后支持SFD_NONBLOCK、SFD_CLOEXEC；
+成功返回文件描述符，返回的fd支持以下操作：read、select(poll、epoll)、close

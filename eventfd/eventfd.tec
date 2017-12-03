@@ -1,0 +1,24 @@
+#include <sys/eventfd.h> 
+int eventfd(unsigned int initval, int flags);
+
+创建一个eventfd，这是一个计数器相关的fd，计数器不为零是有可读事件发生，
+read以后计数器清零，write递增计数器；返回的fd可以进行如下操作：read、write、select(poll、epoll)、close。
+
+这个函数会创建一个事件对象 (eventfd object), 用来实现，进程(线程)间的等待/通知(wait/notify) 机制. 
+内核会为这个对象维护一个64位的计数器(uint64_t)。并且使用第一个参数(initval)初始化这个计数器。
+调用这个函数就会返回一个新的文件描述符(event object)。2.6.27版本开始可以按位设置第二个参数(flags)。
+
+EFD_NONBLOCK
+功能同open(2)的O_NONBLOCK，设置对象为非阻塞状态，如果没有设置这个状态的话，read(2)读eventfd,并且计数器的值为0,
+就一直堵塞在read调用当中.要是设置了这个标志， 就会返回一个 EAGAIN 错误(errno = EAGAIN)。
+效果也如同额外调用select(2)达到的效果。
+
+EFD_CLOEXEC
+这个标识被设置的话，调用exec后会自动关闭文件描述符，防止泄漏。如果是2.6.26或之前版本的内核，flags 必须设置为0。
+创建这个对象后，可以对其做如下操作：
+1) write： 将缓冲区写入的8字节整形值加到内核计数器上。
+2) read： 读取8字节值， 并把计数器重设为0. 如果调用read的时候计数器为0， 要是eventfd是阻塞的， read就一直阻塞在这里，
+否则就得到 一个EAGAIN错误。如果buffer的长度小于8那么read会失败， 错误代码被设置成 EINVAL。
+3) poll select epoll
+4) close: 当不需要eventfd的时候可以调用close关闭， 当这个对象的所有句柄都被关闭的时候，内核会释放资源。
+为什么不是close就直接释放呢， 如果调用fork 创建进程的时候会复制这个句柄到新的进程，并继承所有的状态。
